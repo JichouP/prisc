@@ -23,6 +23,17 @@ BOOL GetMonitorInfoFromPoint(POINT pt, LPMONITORINFO lpmi)
     return GetMonitorInfoW(hMonitor, lpmi);
 }
 
+// タイトルバーをつける
+BOOL AttachTitleBar(HWND hWnd)
+{
+    if (SetWindowLong(hWnd, GWL_STYLE, WS_BORDER | WS_CAPTION | WS_SYSMENU | WS_VISIBLE | WS_THICKFRAME | WS_MINIMIZEBOX) == 0)
+    {
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 // タイトルバーを取り除く
 BOOL RemoveTitleBar(HWND hWnd)
 {
@@ -95,6 +106,17 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int)
 
     // プリコネのウィンドウ左上の位置
     POINT windowPos = { windowRect.left, windowRect.top };
+
+    // すでにフルスクリーンだったらもとに戻す
+    int windowWidth, windowHeight;
+    windowWidth = windowRect.right - windowRect.left;
+    windowHeight = windowRect.bottom - windowRect.top;
+
+    if (IsFullscreenable(windowWidth, windowHeight)) {
+        AttachTitleBar(hWndPriconne);
+        SetWindowPos(hWndPriconne, HWND_NOTOPMOST, windowRect.left, windowRect.top, 1280, 750, SWP_SHOWWINDOW);
+        return 0;
+    }
 
     // プリコネのウィンドウが含まれるモニターの情報を取得する
     if (GetMonitorInfoFromPoint(windowPos, &monitorInfoEx) == FALSE)
