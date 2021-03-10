@@ -73,7 +73,7 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int)
     const wchar_t *title = L"プリスク";
 
     // プリコネのウィンドウを探す
-    HWND hWndPriconne = FindWindowW(L"UnityWndClass", L"PrincessConnectReDive");
+    HWND hWndPriconne = FindWindowW(L"UnityWndClass", L"umamusume");
 
     // 見つからない場合は終了
     if (hWndPriconne == NULL)
@@ -108,13 +108,15 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int)
     POINT windowPos = { windowRect.left, windowRect.top };
 
     // すでにフルスクリーンだったらもとに戻す
-    int windowWidth, windowHeight;
+    int windowWidth, windowHeight, originalWidth, originalHeight;
     windowWidth = windowRect.right - windowRect.left;
     windowHeight = windowRect.bottom - windowRect.top;
+    originalWidth = 489;
+    originalHeight = 879;
 
-    if (IsFullscreenable(windowWidth, windowHeight)) {
+    if (windowHeight == 1080) {
         AttachTitleBar(hWndPriconne);
-        SetWindowPos(hWndPriconne, HWND_NOTOPMOST, windowRect.left, windowRect.top, 1280, 750, SWP_SHOWWINDOW);
+        SetWindowPos(hWndPriconne, HWND_NOTOPMOST, windowRect.left, windowRect.top, originalWidth, originalHeight, SWP_SHOWWINDOW);
         return 0;
     }
 
@@ -134,10 +136,11 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int)
 #endif
 
     // ウィンドウのサイズ
-    int width, height;
+    int width, height, targetWidth, targetHeight;
     width = monitorInfoEx.rcMonitor.right - monitorInfoEx.rcMonitor.left;
     height = monitorInfoEx.rcMonitor.bottom - monitorInfoEx.rcMonitor.top;
-
+    targetWidth = height * originalWidth / originalHeight;
+    targetHeight = height;
     // フルスクリーン化可能な解像度でない場合
     if (!IsFullscreenable(width, height)) {
         LPCWSTR message =
@@ -163,7 +166,9 @@ LR"(フルスクリーン化できることを確認済みの解像度は以下�
     }
 
     // ウィンドウを移動&サイズ変更
-    MoveWindow(hWndPriconne, monitorInfoEx.rcMonitor.left, monitorInfoEx.rcMonitor.top, width, height, FALSE);
+    MoveWindow(hWndPriconne, monitorInfoEx.rcMonitor.left, monitorInfoEx.rcMonitor.top, targetWidth, targetHeight, FALSE); // left
+    // MoveWindow(hWndPriconne, monitorInfoEx.rcMonitor.left + width / 2 - targetWidth / 2, monitorInfoEx.rcMonitor.top, targetWidth, targetHeight, FALSE); // center
+    // MoveWindow(hWndPriconne, monitorInfoEx.rcMonitor.right - targetWidth, monitorInfoEx.rcMonitor.top, targetWidth, targetHeight, FALSE); // right
 
     return 0;
 }
