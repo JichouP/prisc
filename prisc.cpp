@@ -107,19 +107,6 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int)
     // プリコネのウィンドウ左上の位置
     POINT windowPos = { windowRect.left, windowRect.top };
 
-    // すでにフルスクリーンだったらもとに戻す
-    int windowWidth, windowHeight, originalWidth, originalHeight;
-    windowWidth = windowRect.right - windowRect.left;
-    windowHeight = windowRect.bottom - windowRect.top;
-    originalWidth = 489;
-    originalHeight = 879;
-
-    if (windowHeight == 1080) {
-        AttachTitleBar(hWndPriconne);
-        SetWindowPos(hWndPriconne, HWND_NOTOPMOST, windowRect.left, windowRect.top, originalWidth, originalHeight, SWP_SHOWWINDOW);
-        return 0;
-    }
-
     // プリコネのウィンドウが含まれるモニターの情報を取得する
     if (GetMonitorInfoFromPoint(windowPos, &monitorInfoEx) == FALSE)
     {
@@ -136,11 +123,32 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int)
 #endif
 
     // ウィンドウのサイズ
-    int width, height, targetWidth, targetHeight;
+    int width, height, targetWidth, targetHeight, windowWidth, windowHeight, originalWidth, originalHeight, originalWidth_H, originalHeight_H;
     width = monitorInfoEx.rcMonitor.right - monitorInfoEx.rcMonitor.left;
     height = monitorInfoEx.rcMonitor.bottom - monitorInfoEx.rcMonitor.top;
+    windowWidth = windowRect.right - windowRect.left;
+    windowHeight = windowRect.bottom - windowRect.top;
+    originalWidth = 489;
+    originalHeight = 879;
+    originalWidth_H = 1319;
+    originalHeight_H = 771;
     targetWidth = height * originalWidth / originalHeight;
     targetHeight = height;
+
+    // すでにフルスクリーンだったらもとに戻す
+    if (windowHeight == 1080) {
+        if (windowWidth == width) {
+            // 横画面の場合
+            AttachTitleBar(hWndPriconne);
+            SetWindowPos(hWndPriconne, HWND_NOTOPMOST, windowRect.left, windowRect.top, originalWidth_H, originalHeight_H, SWP_SHOWWINDOW);
+            return 0;
+        }
+        // 縦画面の場合
+        AttachTitleBar(hWndPriconne);
+        SetWindowPos(hWndPriconne, HWND_NOTOPMOST, windowRect.left, windowRect.top, originalWidth, originalHeight, SWP_SHOWWINDOW);
+        return 0;
+    }
+
     // フルスクリーン化可能な解像度でない場合
     if (!IsFullscreenable(width, height)) {
         LPCWSTR message =
@@ -165,10 +173,17 @@ LR"(フルスクリーン化できることを確認済みの解像度は以下�
         return 0;
     }
 
+    // 幅のほうが大きい場合 -> ライブ中
+    if (windowWidth/windowHeight) {
+        // 全画面表示
+        MoveWindow(hWndPriconne, monitorInfoEx.rcMonitor.left, monitorInfoEx.rcMonitor.top, width, height, FALSE);
+        return 0;
+    }
+
     // ウィンドウを移動&サイズ変更
-    MoveWindow(hWndPriconne, monitorInfoEx.rcMonitor.left, monitorInfoEx.rcMonitor.top, targetWidth, targetHeight, FALSE); // left
+    // MoveWindow(hWndPriconne, monitorInfoEx.rcMonitor.left, monitorInfoEx.rcMonitor.top, targetWidth, targetHeight, FALSE); // left
     // MoveWindow(hWndPriconne, monitorInfoEx.rcMonitor.left + width / 2 - targetWidth / 2, monitorInfoEx.rcMonitor.top, targetWidth, targetHeight, FALSE); // center
-    // MoveWindow(hWndPriconne, monitorInfoEx.rcMonitor.right - targetWidth, monitorInfoEx.rcMonitor.top, targetWidth, targetHeight, FALSE); // right
+    MoveWindow(hWndPriconne, monitorInfoEx.rcMonitor.right - targetWidth, monitorInfoEx.rcMonitor.top, targetWidth, targetHeight, FALSE); // right
 
     return 0;
 }
